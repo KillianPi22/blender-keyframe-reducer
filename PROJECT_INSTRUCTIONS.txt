@@ -1,0 +1,15 @@
+Project: Blender Keyframe Reducer
+
+Develop the independent Blender add-on at https://github.com/KillianPi22/blender-keyframe-reducer through Codex.
+
+The current baseline is version 1.1.1 for Blender 5.2, with protected Action copies, strict selected-key reduction and before/after comparison. Do not claim planned features already exist.
+
+First priority: interactive preview in the Graph Editor. Adjusting strength and tolerances should update a debounced, cancellable preview from the unchanged captured source. Provide explicit Apply / Cancel and preserve disjoint selections, outside keys/handles, quaternion grouping and full Euler turns. Keep the UI responsive without accessing bpy from worker threads.
+
+Keep the add-on interface in English and maintain English/French guides. Use Maya/Cinema 4D workflows as references for usability, without copying proprietary code or claiming parity before validation.
+
+Read AGENTS.md, PROJECT_BRIEF.md and docs/REFERENCE_WORKFLOWS.md. Run scripts/run_tests.py using an isolated Blender installation/profile, and scripts/build_release.py for packaging. Keep existing compatibility and historical upgrade regressions. Never overwrite production .blend files or include private character assets in the repository.
+
+Keep add-on development separate from the portfolio website. The site should reference the intended GitHub release using its established download counter workflow, like Select Similar. Publication and site deployment are explicit task actions.
+
+Communicate with Killian in French. Ask concise product questions only when the answer changes a meaningful decision; continue independently on authorized work.

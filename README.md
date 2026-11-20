@@ -2,6 +2,8 @@
 
 An independent, free Blender extension for reducing animation keys on a protected Action copy. Maintained by Killian Pichon. GPL-3.0-or-later.
 
+[Repository](https://github.com/KillianPi22/blender-keyframe-reducer) | [Release 1.1.1](https://github.com/KillianPi22/blender-keyframe-reducer/releases/tag/v1.1.1) | [Installable ZIP](https://github.com/KillianPi22/blender-keyframe-reducer/releases/download/v1.1.1/keyframe_reducer-1.1.1.zip)
+
 **Current baseline: 1.1.1. Requires Blender 5.2.0 or later; tested on Blender 5.2.1 LTS.**
 
 This repository separates add-on development from the portfolio website and the Marionette Workflow Helper. The goal is an efficient animation cleanup workflow inspired by the usability of Maya and Cinema 4D. Feature parity is a development objective, not a claim about this release.
@@ -16,6 +18,8 @@ This repository separates add-on development from the portfolio website and the 
 - English interface; [English guide](keyframe_reducer/README_EN.md) and [French guide](keyframe_reducer/README_FR.md).
 
 **Interactive slider preview is the next milestone. It is not implemented in 1.1.1.** The current interface requires **Recalculate from Source** after changing values. See [PROJECT_BRIEF.md](PROJECT_BRIEF.md) for scope and acceptance criteria.
+
+[Official workflow references](docs/REFERENCE_WORKFLOWS.md) compare Maya, Cinema 4D and Blender behavior without promising feature equivalence.
 
 ## Install
 
@@ -56,7 +60,9 @@ Build outputs go to ignored `dist/`: an installable extension ZIP, a delivery pa
 
 Current validation concerns sampled local transforms, not continuous world-space error or foot-contact preservation. Reduction does not correct capture errors or remove jitter automatically. NLA results must be baked to an Action first. See the guides for the full limitations.
 
-Private production scenes and third-party character assets are not included. Optional scene tests accept a locally supplied compatible fixture; see [tests/README.md](tests/README.md).
+Private production scenes and third-party character assets are not included. The unchanged historical guides describe a scene supplied with the original private delivery; that scene is absent from this public repository and its new delivery pack. Optional scene tests accept a locally supplied compatible fixture; see [tests/README.md](tests/README.md).
+
+GitHub's build workflow checks Python syntax and package integrity. It does not run Blender. The release workflow publishes only when `release.json` is explicitly changed on `main`, a matching version tag is pushed, or it is manually triggered; existing release assets are never overwritten. Each requested version needs matching source metadata and a release note under `docs/releases/`.
 
 ## Distribution
 

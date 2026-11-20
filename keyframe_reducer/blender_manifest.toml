@@ -1,0 +1,13 @@
+schema_version = "1.0.0"
+id = "keyframe_reducer"
+version = "1.1.1"
+name = "Keyframe Reducer"
+tagline = "Reduce all or selected animation keys on a protected copy"
+maintainer = "Killian Pichon"
+type = "add-on"
+tags = ["Animation"]
+blender_version_min = "5.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+[build]
+paths_exclude_pattern = ["__pycache__/", "*.pyc"]
