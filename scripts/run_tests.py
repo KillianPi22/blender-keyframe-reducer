@@ -14,7 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 SUITES = {
     'core': ('tests_blender.py', 'TEST_SUMMARY'),
     'selection': ('tests_selection.py', 'SELECTION_TEST_SUMMARY'),
+    'simplify': ('tests_simplify.py', 'SIMPLIFY_TEST_SUMMARY'),
+    'fitting': ('tests_fitting.py', 'FITTING_TEST_SUMMARY'),
+    'preview': ('tests_preview.py', 'PREVIEW_TEST_SUMMARY'),
     'upgrade': ('tests_upgrade.py', 'UPGRADE_TEST_SUMMARY'),
+    'upgrade_current': ('tests_upgrade_current.py', 'CURRENT_UPGRADE_TEST_SUMMARY'),
 }
 
 

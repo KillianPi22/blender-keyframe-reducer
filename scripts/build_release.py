@@ -55,7 +55,7 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     entries = {p.relative_to(PACKAGE).as_posix(): p.read_bytes() for p in PACKAGE.rglob('*')
                if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc'}
-    required = {'__init__.py', 'core.py', 'engine.py', 'selection.py', 'blender_manifest.toml',
+    required = {'__init__.py', 'core.py', 'fitting.py', 'engine.py', 'selection.py', 'simplify.py', 'preview.py', 'blender_manifest.toml',
                 'LICENSE', 'README_EN.md', 'README_FR.md'}
     if not required.issubset(entries):
         raise ValueError(f'Missing package files: {required - entries.keys()}')

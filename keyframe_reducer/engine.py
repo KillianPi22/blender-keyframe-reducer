@@ -6,7 +6,7 @@ import bisect
 import math
 import re
 from dataclasses import dataclass, field
-from .core import distance, reduce_indices, extrema_indices
+from .core import complete, distance, reduce_indices, extrema_indices
 
 
 TRANSFORMS = {'location': 'LOCATION', 'rotation_euler': 'EULER',
@@ -29,6 +29,9 @@ class Settings:
     sample_step: float = 0.5
     selected_bones: set | None = None
     key_selection: list | None = None
+    method: str = 'REDUCE'
+    preserve_manual: bool = True
+    simplify_mode: str = 'KEEP'
 
 
 @dataclass
@@ -42,6 +45,9 @@ class Report:
     max_rotation_error: float = 0.0
     max_scale_error: float = 0.0
     warnings: list = field(default_factory=list)
+    scope_before: int = 0
+    scope_after: int = 0
+    curve_details: list = field(default_factory=list)
 
 
 def slot_curves(action, slot):
@@ -60,8 +66,17 @@ def find_slot(action, identifier):
 
 
 def snapshot(fc):
-    return [dict(co=tuple(k.co), left=tuple(k.handle_left), right=tuple(k.handle_right),
-                 **{name: getattr(k, name) for name in KEY_FIELDS}) for k in fc.keyframe_points]
+    return complete(snapshot_steps(fc))
+
+
+def snapshot_steps(fc):
+    result = []
+    for index, k in enumerate(fc.keyframe_points):
+        if index % 128 == 0:
+            yield
+        result.append(dict(co=tuple(k.co), left=tuple(k.handle_left), right=tuple(k.handle_right),
+                           **{name: getattr(k, name) for name in KEY_FIELDS}))
+    return result
 
 
 def restore(fc, keys):
@@ -83,8 +98,24 @@ def restore_exact(fc, keys):
     tangents on untouched keys. Coordinates and types outside the edit remain
     byte-for-byte identical in Blender's float storage.
     """
-    restore(fc, keys)
-    for key, saved in zip(fc.keyframe_points, keys):
+    return complete(restore_exact_steps(fc, keys))
+
+
+def restore_exact_steps(fc, keys):
+    fc.keyframe_points.clear()
+    fc.keyframe_points.add(len(keys))
+    for index, (key, saved) in enumerate(zip(fc.keyframe_points, keys)):
+        if index % 128 == 0:
+            yield
+        key.co = saved['co']
+        for name in KEY_FIELDS:
+            setattr(key, name, saved[name])
+        key.handle_left = saved['left']
+        key.handle_right = saved['right']
+    fc.update()
+    for index, (key, saved) in enumerate(zip(fc.keyframe_points, keys)):
+        if index % 128 == 0:
+            yield
         key.handle_left = saved['left']
         key.handle_right = saved['right']
 
@@ -224,7 +255,17 @@ def reduce_group(curves, kind, settings):
 
 
 def reduce_action(action, slot, settings, progress=None):
+    return complete(reduce_action_steps(action, slot, settings, progress))
+
+
+def reduce_action_steps(action, slot, settings, progress=None):
     import json
+    if settings.method not in {'REDUCE', 'SIMPLIFY'}:
+        raise ValueError('Unknown curve operation.')
+    if settings.method == 'SIMPLIFY' and settings.key_selection is None:
+        raise ValueError('Simplify Curve requires selected keys in the Graph Editor.')
+    if settings.method == 'SIMPLIFY' and settings.simplify_mode not in {'KEEP', 'FIT'}:
+        raise ValueError('Unknown simplification mode.')
     all_curves = slot_curves(action, slot)
     report = Report(before=sum(len(fc.keyframe_points) for fc in all_curves))
     groups = {}
@@ -236,23 +277,50 @@ def reduce_action(action, slot, settings, progress=None):
     for fc in all_curves:
         kind = group_kind(fc.data_path)
         if kind is None:
+            if settings.method == 'SIMPLIFY' and selection.get((fc.data_path, fc.array_index)):
+                warning = 'Unsupported selected curves were preserved; select location, rotation or scale keys.'
+                if warning not in report.warnings:
+                    report.warnings.append(warning)
             continue
         match = BONE_PATH.match(fc.data_path)
         if settings.selected_bones is not None:
             if not match or json.loads(match.group(1)) not in settings.selected_bones:
                 continue
-        groups.setdefault((fc.data_path, kind), []).append(fc)
+        # Simplify keeps each scalar transform curve independent. Quaternion
+        # components must still be processed and checked as an orientation.
+        axis = fc.array_index if settings.method == 'SIMPLIFY' and kind != 'QUATERNION' else None
+        groups.setdefault((fc.data_path, kind, axis), []).append(fc)
     if not groups:
         raise ValueError('No transform curves in the selection or active slot.')
-    for number, ((path, kind), curves) in enumerate(groups.items()):
+    for number, ((path, kind, axis), curves) in enumerate(groups.items()):
         curves.sort(key=lambda c: c.array_index)
-        if selection is None:
+        def scope_count():
+            count = 0
+            for fc in curves:
+                frames = None if selection is None else selection.get((fc.data_path, fc.array_index), set())
+                for index, key in enumerate(fc.keyframe_points):
+                    if index % 256 == 0:
+                        yield
+                    count += frames is None or float(key.co.x) in frames
+            return count
+        scope_before = yield from scope_count()
+        if settings.method == 'SIMPLIFY':
+            from .simplify import simplify_selected_group_steps
+            before, after, error, warning = yield from simplify_selected_group_steps(curves, kind, settings, selection)
+        elif selection is None:
             before, after, error, warning = reduce_group(curves, kind, settings)
         else:
             from .selection import reduce_selected_group
             before, after, error, warning = reduce_selected_group(curves, kind, settings, selection)
         report.reduced_groups += after < before
         report.preserved_groups += after == before
+        scope_after = yield from scope_count()
+        report.scope_before += scope_before
+        report.scope_after += scope_after
+        if scope_before:
+            report.curve_details.append(dict(data_path=path, axis=axis, kind=kind,
+                before=scope_before, after=scope_after, max_error=error,
+                tolerance=group_tolerance(kind, settings), warning=warning))
         report.max_error_ratio = max(report.max_error_ratio, error/group_tolerance(kind, settings))
         if kind == 'LOCATION':
             report.max_position_error = max(report.max_position_error, error)
@@ -264,5 +332,6 @@ def reduce_action(action, slot, settings, progress=None):
             report.warnings.append(warning)
         if progress:
             progress(number+1, len(groups))
+        yield
     report.after = sum(len(fc.keyframe_points) for fc in all_curves)
     return report

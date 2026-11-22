@@ -1,4 +1,7 @@
-# Keyframe Reducer 1.1.1
+# Keyframe Reducer 1.5.0 — version de développement
+
+La version stable publiée reste la 1.1.1. Ce guide décrit le code 1.5.0 non publié,
+avec **l'aperçu interactif pour Editable Bezier**.
 
 Add-on gratuit pour Blender 5.2, développé et testé dans Blender **5.2.1 LTS**.
 Réduction inspirée du travail avec le Key Reducer de Cinema 4D ; ce n'est pas une
@@ -12,15 +15,161 @@ Ce guide est en français et reprend les libellés anglais exacts.
 
 1. Décompresser le **pack** de livraison.
 2. Dans Blender : **Edit > Preferences > Add-ons > menu en haut à droite > Install from Disk**.
-3. Sélectionner **keyframe_reducer-1.1.1.zip**, sans décompresser ce ZIP interne.
+3. Sélectionner **keyframe_reducer-1.5.0.zip**, sans décompresser ce ZIP interne.
 4. Activer **Keyframe Reducer** si nécessaire.
 5. Dans la vue 3D ou le Graph Editor : appuyer sur **N**, puis ouvrir **Key Reducer**.
 
 Blender 5.2.0 minimum. Aucune dépendance, connexion réseau, inscription ou permission spéciale.
 
-Pour mettre à jour la version 1.0.0 ou 1.1.0 : installer le nouveau ZIP au même endroit et
+Pour mettre à jour une ancienne version : installer le nouveau ZIP au même endroit et
 autoriser son remplacement. Enregistrer le projet puis relancer Blender si l'ancienne
 interface reste affichée.
+
+## Editable Bezier : moins de contrôles par os, avec des tangentes ajustées
+
+Pour retravailler l'animation, choisir **Tool: Simplify Curve > Curve Style:
+Editable Bezier**. Ce mode ajuste les tangentes Bezier en plus de retirer des clés.
+Un arc peut ainsi être décrit par quelques contrôles utiles, au lieu de nombreux
+points répartis sur la courbe.
+
+1. Sélectionner un ou deux os en Pose Mode, puis une plage représentative de leurs
+   points de clés dans le Graph Editor.
+2. Cliquer sur **Use Bone Animation Profile**. Ce bouton choisit **Simplify Curve >
+   Editable Bezier**, active **Selected Bones Only** et protège les extrema
+   significatifs et les poses marquées. Il conserve tes tolérances numériques
+   et ne lance pas encore le calcul.
+3. Commencer avec **Rotation: 0.5°**. Les limites de position et d'échelle restent
+   inchangées ; la position est en unités locales du rig. Une limite plus faible
+   conserve davantage de détail de la source.
+4. Cliquer sur **Start Interactive Preview**, puis déplacer **Reduction**. Les
+   courbes et le compteur se mettent à jour après une courte pause. Comparer
+   **Original / Preview**, y compris le mouvement dans la vue 3D.
+5. Choisir **Apply Preview** pour retoucher le résultat, ou **Cancel** pour revenir au départ.
+
+### Contrôles interactifs
+
+Reduction multiplie les tolérances de base : avec Rotation à 0,5°, Reduction à
+0,5 autorise 0,25°, et Reduction à 2 autorise 1°. Une valeur plus grande permet
+généralement moins de clés. Ce n'est ni un nombre de clés cible ni un pourcentage.
+Les limites effectives restent visibles ; les limites de base sont dans les
+options. Chaque modification repart d'une copie figée de la source et remplace
+les demandes de calcul précédentes.
+
+Le dernier résultat terminé reste visible pendant le calcul du suivant. Le
+compteur indique alors qu'il s'agit du résultat précédent. **Apply Preview**
+n'est disponible que lorsque le réglage actuel est calculé. Les bones et plages
+de clés sont capturés au démarrage ; changer la sélection visible ne les étend pas.
+Depuis une comparaison manuelle existante, l'aperçu reprend sa plage capturée.
+Pour choisir une autre plage, terminer cette comparaison avec Restore Original
+ou Keep Copy for Editing, sélectionner la nouvelle plage et relancer l'aperçu.
+
+Cancel restaure l'Action, le slot et la sélection de départ et supprime les copies
+temporaires inutilisées. Apply conserve une Action éditable et arrête les mises
+à jour. Undo/redo, chargement, désactivation/mise à jour du plugin et sauvegarde
+ferment l'aperçu. **Appliquer avant de sauvegarder** : sinon, l'aperçu non appliqué
+est annulé et l'Action de départ est sauvegardée. Un aperçu retouché manuellement
+est conservé plutôt que supprimé ; appliquer avant de retoucher reste le workflow
+normal. Une source modifiée ou un autre objet/Action actif arrête le travail périmé.
+
+Le calcul, l'échantillonnage et l'écriture des courbes avancent par petites étapes
+sur le thread principal. Une grosse Action prend encore du temps et la copie,
+la vérification ou la suppression de données Blender peut provoquer de courtes
+pauses. Il s'agit d'une mise à jour automatique et annulable, pas d'une garantie
+de résultat instantané sur un rig complet. Commencer avec un ou deux bones.
+
+**Simplify Selected Keys / Recalculate from Source** restent disponibles pour
+un calcul manuel ponctuel, suivi de **Keep Copy for Editing**.
+
+Le panneau affiche **Settings changed: Recalculate** lorsque le résultat visible
+correspond aux anciens réglages ou à une autre sélection d'os. Le recalcul reste manuel.
+
+Editable Bezier **reconstruit les tangentes sélectionnées, y compris manuelles**,
+et convertit les segments linéaires sélectionnés en Bezier. Les poignées intérieures
+sont Aligned, avec une pente commune de chaque côté de la clé. Les extrema importants
+et les temps des clés marquées peuvent rester protégés ; les valeurs et temps des
+clés restantes sont conservés. Les poignées extérieures aux bornes de la sélection
+et le mouvement hors sélection restent intacts.
+
+Le compteur du résultat décrit maintenant les clés réellement concernées après le
+filtre par os. Les comptes par courbe et erreurs échantillonnées sont enregistrés
+dans `kr_report`, sur l'Action résultat. Le moteur retire les clés devenues inutiles
+après ajustement des tangentes et peut remplacer deux clés non protégées par une
+clé source mieux placée. Les limites des plateaux guident le premier ajustement.
+La détection des extrema suit le sommet principal malgré les petites oscillations.
+Chaque proposition est toujours comparée à la courbe d'origine.
+
+À la même tolérance de 0,5°, les essais générés donnent :
+
+| Forme | Editable Bezier 1.3 | Editable Bezier 1.4 |
+|---|---:|---:|
+| Courbe à épaules de 241 clés | 12 | 9 |
+| Transitions rapides de 241 clés | 15 | 10 |
+| Mouvement avec longs plateaux de 361 clés | 11 | 6 |
+| Arc avec petites oscillations de 361 clés | 12 | 4 |
+
+Ce sont des exemples synthétiques, contrôlés indépendamment tous les seizièmes
+d'image. Ils ne valident pas le rig du Minotaure et ne garantissent pas un nombre
+minimal de clés. Le résultat Blender est vérifié aux huitièmes de chaque intervalle
+source ; en cas d'écart, le moteur réessaie sur ces échantillons plus fins, puis
+conserve la source si nécessaire.
+
+Utiliser 0,25° pour davantage de détail, 0,5° comme point de départ, ou 1° si un
+écart plus grand convient au mouvement. Ce sont des limites d'erreur angulaire,
+pas des garanties de qualité ni un nombre de clés cible. La position dépend des
+unités locales du rig. Les oscillations dépassant la limite doivent rester
+représentées ; les retirer demanderait davantage de déformation autorisée ou une
+opération de lissage distincte. Aucun filtre de lissage n'est appliqué ici.
+
+**Keep Existing Handles** reste le choix par défaut pour préserver le comportement
+de la 1.2 : sélectionner explicitement Editable Bezier pour ce nouveau travail.
+Ce mode n'ajoute ni lissage, ni filtre Euler, ni verrouillage des contacts en espace
+monde. Le recalcul manuel reste synchrone ; l'aperçu interactif produit le même
+résultat avec un traitement par étapes. Keep Existing Handles et Key Reducer
+conservent leur fonctionnement manuel.
+
+## Simplify Curve : garder les poignées existantes (comportement 1.2)
+
+1. Sélectionner les points des clés de transformation dans le **Graph Editor**.
+   Utiliser **A** pour toutes les clés visibles, ou sélectionner plusieurs plages.
+2. Dans **N > Key Reducer**, choisir **Tool: Simplify Curve > Curve Style: Keep Existing Handles**.
+3. Régler **Allowed Shape Change** : Position / Axis en unités locales du rig,
+   Rotation en unités angulaires, Scale / Axis en facteurs d'échelle. Une tolérance
+   plus faible conserve davantage de détail. Ce n'est pas un pourcentage de clés à retirer.
+4. Garder **Protect Manual Tangents** activé pour protéger les clés Bezier dont
+   les poignées sont Free ou Aligned. Le désactiver autorise leur suppression.
+5. Cliquer sur **Simplify Selected Keys**, puis comparer **Original / Simplified**.
+   Après avoir changé une tolérance, cliquer sur **Recalculate from Source**.
+6. Choisir **Keep Copy for Editing** pour poursuivre les corrections, ou **Restore
+   Original** pour revenir à la source et fermer la comparaison. Le résultat reste
+   disponible dans la liste des Actions pour pouvoir le récupérer.
+
+**Keep Existing Handles** retire les clés redondantes en conservant les valeurs, les temps
+et l'interpolation des clés restantes. Les tangentes automatiques intérieures peuvent
+être recalculées ; les poignées manuelles restantes sont conservées. Les poignées
+des bornes gardent leur position et passent en Free pour protéger le mouvement
+voisin. **Key Reducer** conserve sa reconstruction par groupes et son choix de sortie
+Bezier / Linear.
+
+Simplify traite toujours les clés sélectionnées, même si la portée de Key Reducer
+est Entire Action. Les axes de position, d'échelle et d'Euler sont indépendants,
+même avec des plages différentes. Les clés quaternion WXYZ doivent être sélectionnées
+ensemble ; l'erreur est alors mesurée sur l'orientation. Strength et le choix
+d'interpolation de Key Reducer n'influencent pas Simplify.
+
+Chaque plage exige au moins trois clés consécutives sélectionnées. Les intervalles
+non sélectionnés, les clés isolées, les autres canaux et slots, ainsi que la source,
+sont préservés. Cette version traite uniquement les transformations ; les propriétés
+personnalisées et shape keys ne sont pas prises en charge. Les courbes modifiées,
+verrouillées, muettes, échantillonnées ou d'interpolation non prise en charge sont
+conservées. La protection des extrema et des clés marquées reste dans les options.
+
+La comparaison mémorise la sélection initiale. **Simplify New Selection** prend
+explicitement l'Action affichée comme nouvelle source pour traiter une autre zone.
+Changer d'outil ou de portée conserve sinon la source protégée. Le recalcul reste
+manuel et remplace les corrections faites sur le résultat : terminer la comparaison
+avant d'éditer les clés. La validation échantillonne les courbes locales, y compris
+entre les clés ; elle ne garantit pas une erreur continue ou en espace monde.
+Cet outil ne lisse pas les tremblements et ne déplace pas les clés dans le temps.
 
 ## Correctif 1.1.1 : mise à jour sans mélange de versions
 
@@ -70,7 +219,8 @@ de deux clés restent intactes.
   la vue 3D. Le Dope Sheet n'est pas utilisé pour capturer la sélection.
 
 La sélection mémorisée et la comparaison sont conservées dans le fichier .blend.
-Changer de portée commence une nouvelle comparaison à partir de l'Action affichée.
+Changer de portée conserve la source protégée ; **Reduce New Selection** prend
+explicitement l'Action affichée comme nouvelle source.
 
 ## Utilisation
 

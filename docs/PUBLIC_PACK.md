@@ -2,18 +2,19 @@
 
 ## English
 
-Install `keyframe_reducer-1.1.1.zip` from Blender's **Install from Disk** command. Do not install the outer delivery pack.
+Install the inner `keyframe_reducer-<version>.zip` from Blender's **Install from Disk** command. Do not install the outer delivery pack. This working source builds unpublished 1.5.0 development packages; the stable release is still 1.1.1.
 
-This public pack contains the unchanged 1.1.1 extension source, its English/French guides and license. It excludes private production scenes and character assets. The historical guides mention the original test scene and development bundle; those files are not included in this public pack. The repository contains source code and synthetic tests:
+This pack contains the extension source, its English/French guides and license. It excludes private production scenes and character assets. The historical test-scene section of the guides describes the original private bundle; those files are not included. The repository contains source code and synthetic tests:
 
 https://github.com/KillianPi22/blender-keyframe-reducer
 
-Interactive Graph Editor preview is planned; version 1.1.1 still uses **Recalculate from Source** after parameter changes.
+1.5.0 development adds **Start Interactive Preview** to **Simplify Curve / Editable Bezier**. Adjust **Reduction**, compare Original / Preview, then Apply or Cancel. The source and captured scope stay protected. Apply before saving; otherwise the preview is cancelled. Other modes retain manual recalculation. Large Actions still require time.
+
 
 ## Français
 
-Installez `keyframe_reducer-1.1.1.zip` avec **Install from Disk** dans Blender. N'installez pas l'archive externe complète.
+Installez le ZIP interne `keyframe_reducer-<version>.zip` avec **Install from Disk** dans Blender. N'installez pas l'archive externe complète. Le code actuel produit une version de développement 1.5.0 non publiée ; la version stable reste la 1.1.1.
 
-Cette archive publique contient le code inchangé de l'extension 1.1.1, ses guides anglais/français et sa licence. Les scènes de production et personnages privés sont exclus. Les guides historiques mentionnent une scène de test et un dossier de développement fournis dans la livraison privée d'origine ; ils ne sont pas inclus dans cette archive publique. Le dépôt contient le code source et les tests synthétiques.
+Cette archive contient le code de l'extension, ses guides anglais/français et sa licence. Les scènes de production et personnages privés sont exclus. La section historique des guides décrit la scène de test de la livraison privée d'origine ; elle n'est pas incluse. Le dépôt contient le code source et les tests synthétiques.
 
-La prévisualisation interactive dans le Graph Editor est prévue. Dans la version 1.1.1, il faut encore cliquer sur **Recalculate from Source** après avoir modifié les paramètres.
+La version de développement 1.5.0 ajoute **Start Interactive Preview** dans **Simplify Curve / Editable Bezier**. Ajuster **Reduction**, comparer Original / Preview, puis Apply ou Cancel. La source et la portée capturée restent protégées. Appliquer avant de sauvegarder ; sinon l'aperçu est annulé. Les autres modes restent manuels. Les grosses Actions demandent encore du temps.

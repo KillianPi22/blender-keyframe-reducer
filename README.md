@@ -6,7 +6,14 @@ An independent, free Blender extension for reducing animation keys on a protecte
 
 **Current baseline: 1.1.1. Requires Blender 5.2.0 or later; tested on Blender 5.2.1 LTS.**
 
+**Working source: 1.5.0 development, not published.** Choose **Tool: Simplify Curve > Curve Style: Editable Bezier** to fit a smaller set of selected transform keys with aligned tangents for editing. **Keep Existing Handles** retains the 1.2 behavior and remains the default. Fitting explicitly rebuilds selected tangents, including manual handles, within unchanged local position, angular rotation and scale tolerances. Key Reducer remains available for grouped reconstruction. Editable Bezier now also offers an interactive preview; the other modes keep manual recalculation. All modes use protected source copies; **Restore Original** ends comparison and returns to the source. See [the fitting investigation](docs/EDITABLE_CURVES.md) for measured results and limitations.
+
 This repository separates add-on development from the portfolio website and the Marionette Workflow Helper. The goal is an efficient animation cleanup workflow inspired by the usability of Maya and Cinema 4D. Feature parity is a development objective, not a claim about this release.
+
+Version 1.4 introduced **Use Bone Animation Profile**, bounded anchor removal and
+consolidation, dominant-extreme detection through small ripples, exact-hold seeds
+and finer final validation with a retry. The profile keeps numeric tolerances.
+The panel marks earlier results when settings or the bone filter change.
 
 ## Available now
 
@@ -17,13 +24,13 @@ This repository separates add-on development from the portfolio website and the 
 - Preserve unselected keys and handles, unrelated slots and unsupported channels.
 - English interface; [English guide](keyframe_reducer/README_EN.md) and [French guide](keyframe_reducer/README_FR.md).
 
-**Interactive slider preview is the next milestone. It is not implemented in 1.1.1.** The current interface requires **Recalculate from Source** after changing values. See [PROJECT_BRIEF.md](PROJECT_BRIEF.md) for scope and acceptance criteria.
+**Interactive preview is available for Simplify Curve / Editable Bezier in 1.5.0 development.** Choose **Start Interactive Preview**, adjust **Reduction**, compare Original / Preview, then Apply or Cancel. Processing is cooperative and automatic after a short pause; large scopes are not instantaneous. Other modes retain **Recalculate from Source**. See [PROJECT_BRIEF.md](PROJECT_BRIEF.md) for scope and acceptance criteria.
 
 [Official workflow references](docs/REFERENCE_WORKFLOWS.md) compare Maya, Cinema 4D and Blender behavior without promising feature equivalence.
 
 ## Install
 
-Build the extension ZIP, or use the published release when available. In Blender choose **Edit > Preferences > Add-ons > Install from Disk**, select `keyframe_reducer-1.1.1.zip`, and enable the extension. In the Graph Editor press **N > Key Reducer**. Install the inner extension ZIP, not the complete delivery pack.
+Build the development extension ZIP, or use the published 1.1.1 release linked above. In Blender choose **Edit > Preferences > Add-ons > Install from Disk**, select the inner `keyframe_reducer-<version>.zip`, and enable the extension. In the Graph Editor press **N > Key Reducer**. Do not install the complete delivery pack.
 
 ## Develop and validate
 
@@ -42,7 +49,7 @@ python scripts/run_tests.py --blender 'C:\Program Files\Blender Foundation\Blend
 
 `BLENDER_BIN` can supply the executable instead. The runner starts separate offline background Blender processes with isolated preferences/extensions. It does not change the user's enabled add-ons or open scene. Logs and machine-readable results are written beneath ignored `build/test-runs/` folders.
 
-The default suite contains 25 core/integration checks, 28 selection checks and 17 historical upgrade checks. Use `--suite core`, `--suite selection` or `--suite upgrade` for a focused run. Historical upgrade fixtures reproduce the cached-engine mismatch fixed in 1.1.1; they remain immutable. The core and selection suites test the current working source.
+The default suite includes core/integration, selection, simplify, fitting, interactive preview, historical upgrade and current-version installation checks. Use `--suite core`, `--suite selection`, `--suite simplify`, `--suite fitting`, `--suite preview`, `--suite upgrade` or `--suite upgrade_current` for a focused run. Historical upgrade fixtures reproduce the cached-engine mismatch fixed in 1.1.1; they remain immutable. The other suites test the current working source. Version 1.5.0 passes 253 checks in Blender 5.2.1 LTS; the installed extension's slider, comparison, Apply and Cancel were also checked in the Graph Editor.
 
 Build outputs go to ignored `dist/`: an installable extension ZIP, a delivery pack with both guides, and SHA-256 checksums. Versions are read from the manifest; the build fails if `bl_info` disagrees. The build does not install, publish or modify source.
 
@@ -53,6 +60,9 @@ Build outputs go to ignored `dist/`: an installable extension ZIP, a delivery pa
 | `keyframe_reducer/core.py` | Numerical reduction and angular/vector distance |
 | `keyframe_reducer/engine.py` | Action-slot processing and evaluated curve validation |
 | `keyframe_reducer/selection.py` | Strict selection boundaries and outside preservation |
+| `keyframe_reducer/simplify.py` | Selected-run simplification, fitted handle writing and evaluated validation |
+| `keyframe_reducer/fitting.py` | Blender-independent adaptive cubic fitting with shared slopes |
+| `keyframe_reducer/preview.py` | Debounced cooperative preview, captured scope and temporary Action lifecycle |
 | `keyframe_reducer/__init__.py` | Blender properties, operators and panels |
 | `tests/` | Blender integration and migration regressions |
 | `tests/fixtures/releases/` | Original installation ZIPs for upgrade tests |

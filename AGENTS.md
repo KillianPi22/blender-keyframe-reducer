@@ -4,7 +4,7 @@
 
 - Keep the extension's user interface, tooltips and errors in English. Maintain English and French user guides.
 - Prioritize interactive preview in the Graph Editor. Read PROJECT_BRIEF.md before changing scope.
-- The current source is the released 1.1.1 baseline. Preview is planned, not shipped. Do not describe planned behavior as available.
+- The released baseline is 1.1.1; current source is 1.5.0 development with cooperative interactive preview for Simplify Curve / Editable Bezier. Key Reducer and Keep Existing Handles remain manual. Do not promise instant full-rig updates.
 - Preserve extension ID `keyframe_reducer` and existing `kr.*` operator/property compatibility unless a documented migration is implemented.
 - Keep this repository separate from the portfolio website and Marionette Workflow Helper.
 
@@ -21,8 +21,9 @@
 ## Implementation and validation
 
 - Keep `core.py` independent of bpy. Separate scheduling/preview state from numerical reduction.
+- Keep `fitting.py` independent of bpy. Validate fitted Blender curves after writing; maintain aligned interior tangents, exact outside handles and explicit replacement of selected manual tangents.
 - Do not use Python worker threads to read or mutate bpy data. Interactive work must respect Blender's main-thread context.
-- Make the next preview implementation debounced, cancellable, deterministic and explicit about Apply/Cancel behavior.
+- Keep preview debounced, cancellable, deterministic and explicit about Apply/Cancel. Discard superseded work, clean temporary IDs on history/load/save/reload and preserve external edits and references.
 - Run the relevant suites with `scripts/run_tests.py`; use all suites before a release. Add behavior-level regressions for meaningful changes, especially selection, undo, cancellation and reload.
 - Keep historical fixture ZIPs immutable. Add a new fixture only when testing an actual released migration.
 - `scripts/build_release.py` must remain portable, dependency-free and version-driven. Keep `bl_info`, manifest and release documentation consistent when intentionally bumping a version.

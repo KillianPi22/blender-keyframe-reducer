@@ -1,6 +1,6 @@
 # Reference workflows and interactive preview acceptance criteria
 
-Reviewed: 2026-11-20. Target: Blender 5.2.1, Graph Editor first. Addon UI stays in English; user guides remain available in English and French.
+Reviewed: 2026-11-21. Target: Blender 5.2.1, Graph Editor first. Addon UI stays in English; user guides remain available in English and French.
 
 This document is a development specification. It does not claim feature parity, matching algorithms, or measured performance against Maya or Cinema 4D.
 
@@ -14,6 +14,7 @@ The next milestone is a **Graph Editor interactive preview session** with automa
 
 | Reference | Documented behavior | Design implication |
 | --- | --- | --- |
+| [Unreal Engine: Curve Editor, Simplify](https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-curve-editor-in-unreal-engine) | Removes redundant selected keys using a tolerance; optionally considers user tangent keys and checks between keys at a sample rate. | Add a distinct Simplify Curve mode with prominent tolerances, protected manual tangents, direct A/B comparison and recoverable source. This is workflow inspiration, not algorithmic equivalence. |
 | [Maya 2026: Key Reducer Filter options](https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Animation/files/GUID-63E2EA0D-90E7-45EC-9AF3-D3097A8BA5B9.htm) | Preview; whole curve, selected portions, playback or explicit time range; absolute/percentage precision; synchronized sibling curves; tangent-type preservation. | Make scope and tolerance explicit. Keep separate selection islands. Borrow the preview workflow without assuming Autodesk's algorithm. |
 | [Cinema 4D 2026: Key Reducer](https://help.maxon.net/c4d/2026/en-us/Content/html/Key_Reducer.html) | Interactive Strength, Magnet for nearby key alignment, and preservation of value/time-locked keys. It operates on complete F-curves, ignoring individual key selections. Maxon warns that it treats objects independently and does not account for skeletal dependencies. | Keep the primary controls simple. Our precise selection scope is an intentional extension. Magnet-style time shifts must not be silently introduced by channel synchronization. |
 | [Blender 5.0: Editing F-Curves](https://docs.blender.org/manual/en/5.0/editors/graph_editor/fcurves/editing.html) | Native Decimate offers a removal ratio or an allowed curve-shape change. | Differentiate percentage of keys removed from error tolerance. The addon should add workflow and validation benefits beyond another decimation button. |
@@ -22,6 +23,23 @@ The next milestone is a **Graph Editor interactive preview session** with automa
 The Blender reference describes established native behavior; compatibility with our actual 5.2.1 runtime must be tested locally. Maya's [filterCurve command](https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Tech-Docs/Commands/filterCurve.html) also documents selection precedence and a quaternion flag; its brief flag description does not establish general quaternion guarantees for every filter.
 
 ## Next milestone: required acceptance checks
+
+The unpublished 1.2.0 source now includes **Simplify Curve** for selected transform curves. It preserves surviving interpolation and manual handles, solves automatic interior handles, freezes boundary/outside handles, and validates sampled local error including subframe quarter points. Axes simplify independently except WXYZ quaternions. It still uses manual **Recalculate from Source**. **Restore Original** restores the assignment and ends comparison while retaining the result as an Action; it is not the temporary-preview cleanup lifecycle specified below.
+
+The 1.3.0 development follow-up adds opt-in **Editable Bezier** fitting to support
+the animator's few-key, tangent-driven bone workflow. This explicitly rebuilds
+selected tangents; Keep Existing Handles retains the description above. See
+[the investigation](EDITABLE_CURVES.md) for equal-tolerance comparisons and limits.
+
+Version 1.4.0 refines fitted control placement and provides a **Bone Animation**
+setup profile with unchanged tolerances. It flags settings changes pending manual
+recalculation. This remains separate from the automatic preview milestone below.
+
+The 1.5.0 development implementation now covers interactive **Editable Bezier**
+with a tolerance multiplier, captured scope, coalesced cooperative calculations,
+comparison and Apply/Cancel. See [implemented behavior and measured limits](INTERACTIVE_PREVIEW.md).
+The broader lifecycle and latency criteria below remain the design reference;
+instant large-scope updates and preview for the other methods are not claimed.
 
 ### 1. Nonaccumulating preview
 

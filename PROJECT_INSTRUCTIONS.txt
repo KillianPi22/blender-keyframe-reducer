@@ -2,9 +2,9 @@ Project: Blender Keyframe Reducer
 
 Develop the independent Blender add-on at https://github.com/KillianPi22/blender-keyframe-reducer through Codex.
 
-The current baseline is version 1.1.1 for Blender 5.2, with protected Action copies, strict selected-key reduction and before/after comparison. Do not claim planned features already exist.
+The released baseline is version 1.1.1 for Blender 5.2. Current 1.5.0 development source adds cooperative interactive preview for Simplify Curve / Editable Bezier, with a Reduction multiplier, frozen scope, debouncing, Apply/Cancel and temporary-data cleanup. Key Reducer and Keep Existing Handles remain manual. Large Action copies and checks can still pause Blender; do not promise instant whole-rig updates.
 
-First priority: interactive preview in the Graph Editor. Adjusting strength and tolerances should update a debounced, cancellable preview from the unchanged captured source. Provide explicit Apply / Cancel and preserve disjoint selections, outside keys/handles, quaternion grouping and full Euler turns. Keep the UI responsive without accessing bpy from worker threads.
+Continue improving interactive preview in the Graph Editor. Keep parameter updates debounced and cancellable from the unchanged captured source. Provide explicit Apply / Cancel and preserve disjoint selections, outside keys/handles, quaternion grouping and full Euler turns. Keep the UI responsive without accessing bpy from worker threads.
 
 Keep the add-on interface in English and maintain English/French guides. Use Maya/Cinema 4D workflows as references for usability, without copying proprietary code or claiming parity before validation.
 

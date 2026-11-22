@@ -5,6 +5,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
 import math
 
 
+def complete(steps):
+    """Run the same cooperative calculation synchronously for existing callers."""
+    while True:
+        try:
+            next(steps)
+        except StopIteration as finished:
+            return finished.value
+
+
 def distance(a, b, kind):
     if kind == 'QUATERNION':
         na = math.sqrt(sum(v*v for v in a))
